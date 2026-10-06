@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install server dependencies
+        run: npm --prefix server ci
+
+      - name: Run server linter
+        run: npm --prefix server run lint
+
+      - name: Run server test suite
+        run: npm --prefix server test
+
+      - name: Install client dependencies
+        run: npm --prefix client ci
+
+      - name: Build client production assets
+        run: npm --prefix client run build
+
+  build-push-scan:
+    name: Build, Scan & Push (GHCR)
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set lowercase repository name for GHCR
+        run: echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # -------------------------------------------------------------
+      # API Image: Build, Trivy Vulnerability Scan, and Push
+      # -------------------------------------------------------------
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          load: true
+          tags: |
+            ghcr.io/${{ env.REPO_LOWER }}-api:${{ github.sha }}
+            ghcr.io/${{ env.REPO_LOWER }}-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan API image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LOWER }}-api:${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      # -------------------------------------------------------------
+      # Client Image: Build, Trivy Vulnerability Scan, and Push
+      # -------------------------------------------------------------
+      - name: Build Client image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          load: true
+          tags: |
+            ghcr.io/${{ env.REPO_LOWER }}-client:${{ github.sha }}
+            ghcr.io/${{ env.REPO_LOWER }}-client:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan Client image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ghcr.io/${{ env.REPO_LOWER }}-client:${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      # -------------------------------------------------------------
+      # Push Images to GHCR (Main branch only)
+      # -------------------------------------------------------------
+      - name: Push images to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push ghcr.io/${{ env.REPO_LOWER }}-api:${{ github.sha }}
+          docker push ghcr.io/${{ env.REPO_LOWER }}-api:latest
+          docker push ghcr.io/${{ env.REPO_LOWER }}-client:${{ github.sha }}
+          docker push ghcr.io/${{ env.REPO_LOWER }}-client:latest
