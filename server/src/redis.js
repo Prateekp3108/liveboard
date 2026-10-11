@@ -15,11 +15,7 @@ function initRedis() {
       host: redisHost || '127.0.0.1',
       port: parseInt(process.env.REDIS_PORT || '6379', 10),
       retryStrategy(times) {
-        if (times > 5) {
-          console.warn('Redis retry limit reached, running in standalone mode');
-          return null; // Stop retrying
-        }
-        return Math.min(times * 100, 2000);
+        return Math.min(times * 200, 3000);
       },
       connectTimeout: 3000,
       lazyConnect: false,

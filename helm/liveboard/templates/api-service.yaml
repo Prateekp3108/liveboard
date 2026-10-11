@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "liveboard.fullname" . }}-{{ .Values.api.name }}
+  labels:
+    app.kubernetes.io/component: {{ .Values.api.name }}
+    {{- include "liveboard.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.api.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/component: {{ .Values.api.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "liveboard.fullname" . }}-config
+  labels:
+    {{- include "liveboard.labels" . | nindent 4 }}
+data:
+  PORT: "{{ .Values.api.port }}"
+  NODE_ENV: "production"
+  DB_HOST: "{{ include "liveboard.fullname" . }}-{{ .Values.postgres.name }}"
+  DB_PORT: "{{ .Values.postgres.port }}"
+  DB_NAME: "{{ .Values.postgres.database }}"
+  DB_USER: "{{ .Values.postgres.user }}"
+  REDIS_HOST: "{{ include "liveboard.fullname" . }}-{{ .Values.redis.name }}"
+  REDIS_PORT: "{{ .Values.redis.port }}"

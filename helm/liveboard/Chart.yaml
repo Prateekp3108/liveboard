@@ -1,0 +1,14 @@
+apiVersion: v2
+name: liveboard
+description: Production-grade Helm chart for LiveBoard real-time Kanban application
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - kanban
+  - devops
+  - realtime
+  - express
+  - react
+maintainers:
+  - name: Prateekp3108

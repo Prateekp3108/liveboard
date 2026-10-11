@@ -1,0 +1,179 @@
+# Default values for LiveBoard Helm Chart
+
+global:
+  namespace: liveboard
+
+api:
+  name: api
+  replicaCount: 2
+  image:
+    repository: ghcr.io/prateekp3108/liveboard-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 5000
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  probes:
+    liveness:
+      path: /healthz
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /readyz
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+client:
+  name: client
+  replicaCount: 2
+  image:
+    repository: ghcr.io/prateekp3108/liveboard-client
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 80
+  resources:
+    limits:
+      cpu: 100m
+      memory: 64Mi
+    requests:
+      cpu: 25m
+      memory: 32Mi
+  probes:
+    liveness:
+      path: /
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /
+      initialDelaySeconds: 3
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+
+postgres:
+  name: postgres
+  image:
+    repository: postgres
+    tag: 17.2-alpine
+    pullPolicy: IfNotPresent
+  port: 5432
+  database: liveboard
+  user: postgres
+  password: postgresPassword123!
+  persistence:
+    enabled: true
+    storageClass: standard
+    size: 1Gi
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+redis:
+  name: redis
+  image:
+    repository: redis
+    tag: 7.4.2-alpine
+    pullPolicy: IfNotPresent
+  port: 6379
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "liveboard-api"
+  hosts:
+    - host: liveboard.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /ws
+          pathType: Prefix
+          service: api
+        - path: /healthz
+          pathType: Prefix
+          service: api
+        - path: /readyz
+          pathType: Prefix
+          service: api
+        - path: /metrics
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: client
+    - host: localhost
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /ws
+          pathType: Prefix
+          service: api
+        - path: /healthz
+          pathType: Prefix
+          service: api
+        - path: /readyz
+          pathType: Prefix
+          service: api
+        - path: /metrics
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: client
+    - host: ""
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /ws
+          pathType: Prefix
+          service: api
+        - path: /healthz
+          pathType: Prefix
+          service: api
+        - path: /readyz
+          pathType: Prefix
+          service: api
+        - path: /metrics
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: client

@@ -1,0 +1,33 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "liveboard.fullname" . }}-ingress
+  labels:
+    {{- include "liveboard.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - {{- if .host }}
+      host: {{ .host | quote }}
+      {{- end }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "liveboard.fullname" $ }}-{{ if eq .service "api" }}{{ $.Values.api.name }}{{ else }}{{ $.Values.client.name }}{{ end }}
+                port:
+                  number: {{ if eq .service "api" }}{{ $.Values.api.port }}{{ else }}{{ $.Values.client.port }}{{ end }}
+          {{- end }}
+    {{- end }}
+{{- end }}
