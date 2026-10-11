@@ -27,6 +27,10 @@ logs/
 crash.log
 *.tfvars
 !*.tfvars.example
+*plan
+*plan*
+*-config
+*.kubeconfig
 
 # IDE & OS
 .idea/
