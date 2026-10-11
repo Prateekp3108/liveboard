@@ -3,6 +3,9 @@
 global:
   namespace: liveboard
 
+networkPolicies:
+  enabled: false
+
 api:
   name: api
   replicaCount: 2
