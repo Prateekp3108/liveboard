@@ -11,7 +11,7 @@ api:
   replicaCount: 2
   image:
     repository: ghcr.io/prateekp3108/liveboard-api
-    tag: latest
+    tag: 8dbf585069bbedac44ca268234cd5522af1245e5
     pullPolicy: IfNotPresent
   port: 5000
   resources:
@@ -46,7 +46,7 @@ client:
   replicaCount: 2
   image:
     repository: ghcr.io/prateekp3108/liveboard-client
-    tag: latest
+    tag: 8dbf585069bbedac44ca268234cd5522af1245e5
     pullPolicy: IfNotPresent
   port: 80
   resources:
