@@ -128,6 +128,15 @@ describe('LiveBoard API & Observability Endpoints', () => {
     });
   });
 
+  describe('GET /api/info', () => {
+    it('returns the serving hostname and build identifier', async () => {
+      const res = await request(app).get('/api/info');
+      expect(res.status).toBe(200);
+      expect(res.body.hostname).toBe(require('os').hostname());
+      expect(res.body.build).toBe(process.env.BUILD_SHA || 'dev');
+    });
+  });
+
   describe('WebSocket Real-Time Synchronization', () => {
     it('should establish connection and receive welcome message', (done) => {
       const ws = new WebSocket(`ws://127.0.0.1:${serverPort}/ws`);

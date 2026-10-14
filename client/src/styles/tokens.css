@@ -1,0 +1,14 @@
+:root {
+  --cream: #f4f0e2;
+  --card: #fffdf7;
+  --navy: #1b3a5c;
+  --navy-soft: #5b6f86;
+  --line: rgba(27, 58, 92, .22);
+  --clay: #d98b6c;
+  --blue: #2f6db5;
+  --sage: #6f9a7a;
+  --radius: 6px;
+  --font-heading: 'Fraunces', Georgia, serif;
+  --font-body: 'IBM Plex Sans', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+}

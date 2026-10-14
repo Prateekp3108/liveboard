@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const os = require('os');
 const db = require('./db');
 const redis = require('./redis');
 const {
@@ -91,6 +92,10 @@ function createApp() {
     } catch (err) {
       res.status(500).end(err.message);
     }
+  });
+
+  app.get('/api/info', (req, res) => {
+    res.json({ hostname: os.hostname(), build: process.env.BUILD_SHA || 'dev' });
   });
 
   // REST API routes
